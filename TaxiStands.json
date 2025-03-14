@@ -1,0 +1,50 @@
+{
+    "odata.metadata": "http://datamall2.mytransport.sg/ltaodataservice/$metadata#TaxiStands",
+    "value": [
+        {
+            "TaxiCode": "A01",
+            "Latitude": 1.3038888888888889,
+            "Longitude": 103.83361111111111,
+            "Bfa": "Yes",
+            "Ownership": "LTA",
+            "Type": "Stand",
+            "Name": "Orchard Rd along driveway of Lucky Plaza"
+        },
+        {
+            "TaxiCode": "A05",
+            "Latitude": 1.3041666666666667,
+            "Longitude": 103.83527777777778,
+            "Bfa": "Yes",
+            "Ownership": "Private",
+            "Type": "Stand",
+            "Name": "Mt Elizabeth Rd at Mt Elizabeth Hospital"
+        },
+        {
+            "TaxiCode": "A06",
+            "Latitude": 1.3030555555555556,
+            "Longitude": 103.83749999999999,
+            "Bfa": "Yes",
+            "Ownership": "LTA",
+            "Type": "Stop",
+            "Name": "Cairnhill Rd at Cairnhill Nine"
+        },
+        {
+            "TaxiCode": "A08",
+            "Latitude": 1.3033333333333335,
+            "Longitude": 103.8325,
+            "Bfa": "Yes",
+            "Ownership": "Private",
+            "Type": "Stand",
+            "Name": "Orchard Turn at Wisma Atria Shopping Centre"
+        },
+        {
+            "TaxiCode": "A12",
+            "Latitude": 1.3025,
+            "Longitude": 103.84055555555555,
+            "Bfa": "Yes",
+            "Ownership": "Private",
+            "Type": "Stop",
+            "Name": "Cuppage Rd at Starhub Centre"
+        }
+    ]
+}
