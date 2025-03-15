@@ -79,7 +79,7 @@ def update_traffic_incidents():
         print("Failed to fetch data:", response.status_code)
 
 # Schedule the task to run every 6 hours
-schedule.every(1).hour.do(update_traffic_incidents)
+schedule.every(30).minutes.do(update_traffic_incidents)
 
 # Keep the script running to allow the scheduled task to run
 while True:
