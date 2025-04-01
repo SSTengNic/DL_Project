@@ -7,6 +7,7 @@ import pandas as pd
 from aiohttp import ClientSession
 import backoff
 from tqdm import tqdm
+import random
 
 def generate_timestamps():
     """
@@ -15,7 +16,7 @@ def generate_timestamps():
     """
     last_date = datetime.datetime(2025, 2, 21, 23, 59, 59) # Modify this to set last date
     timestamps = []
-    for i in range(7 * 24): # Modify this to get time period
+    for i in range(1095 * 24): # Modify this to get time period
         time_point = last_date - datetime.timedelta(hours=i)
         timestamps.append(time_point.strftime("%Y-%m-%dT%H:%M:%S"))
     return timestamps
@@ -39,33 +40,46 @@ def filter_station_data(api_data, station_id="S107"):
 
 @backoff.on_exception(backoff.expo, 
                      (aiohttp.ClientError, asyncio.TimeoutError), 
-                     max_tries=10, 
-                     max_time=120)
+                     max_tries=3, 
+                     max_time=60)
 async def fetch_weather_data(session: ClientSession, endpoint: str, date_str: str, semaphore: asyncio.Semaphore):
     """
-    Asynchronously fetch weather data from the API for a given endpoint and timestamp.
-    Implements exponential backoff for retrying on client errors.
+    Asynchronously fetch weather data from the API with improved rate limit handling.
     """
     base_url = "https://api-open.data.gov.sg/v2/real-time/api"
     params = {"date": date_str}
     url = base_url + endpoint
 
     async with semaphore:  # Limit concurrent access
-        try:
-            async with session.get(url, params=params, timeout=10) as response:
-                if response.status == 200:
-                    return await response.json()
-                elif response.status == 429:  # Rate limit exceeded
-                    print(f"Rate limit exceeded for {endpoint} at {date_str}, waiting...")
-                    await asyncio.sleep(5)  # Wait before retrying
-                    return await fetch_weather_data(session, endpoint, date_str, semaphore)
-                else:
-                    text = await response.text()
-                    print(f"Error {response.status} for {endpoint} at {date_str}: {text}")
-                    return None
-        except (aiohttp.ClientError, asyncio.TimeoutError) as e:
-            print(f"Request error for {endpoint} at {date_str}: {e}")
-            raise  # Let backoff handle the retry
+        max_retries = 3
+        retry_count = 0
+        retry_delay = 5
+        
+        while retry_count < max_retries:
+            try:
+                async with session.get(url, params=params, timeout=15) as response:
+                    if response.status == 200:
+                        return await response.json()
+                    elif response.status == 429:  # Rate limit exceeded
+                        retry_count += 1
+                        # Exponential backoff with jitter
+                        jitter = random.uniform(0.5, 1.5)
+                        wait_time = retry_delay * (2 ** retry_count) * jitter
+                        print(f"Rate limit exceeded for {endpoint} at {date_str}, waiting {wait_time:.2f}s... (Attempt {retry_count}/{max_retries})")
+                        await asyncio.sleep(wait_time)
+                        continue  # Try again
+                    else:
+                        text = await response.text()
+                        print(f"Error {response.status} for {endpoint} at {date_str}: {text}")
+                        return None
+            except (aiohttp.ClientError, asyncio.TimeoutError) as e:
+                print(f"Request error for {endpoint} at {date_str}: {e}")
+                raise  # Let backoff handle the retry
+        
+        # If we've exhausted all retries
+        print(f"Failed after {max_retries} attempts for {endpoint} at {date_str}")
+        return None
+    
 
 async def fetch_and_filter(session: ClientSession, endpoint: str, ts: str, semaphore: asyncio.Semaphore, station_id="S107"):
     """
@@ -91,30 +105,47 @@ def save_to_csv(data, filename):
         writer.writerows(data)
     print(f"Data saved to {filename}")
 
-async def process_data_for_endpoint(timestamps, endpoint, station_id="S107", concurrent_requests=5):
+async def process_data_for_endpoint(timestamps, endpoint, station_id="S107", concurrent_requests=3):
     """
-    Process all timestamps for a specific endpoint.
+    Process all timestamps for a specific endpoint with improved rate limiting.
     """
     results = []
     
-    # Limit concurrent API requests
+    # Reduce concurrent requests to avoid overwhelming the API
     semaphore = asyncio.Semaphore(concurrent_requests)
     
+    # Add a global rate limiter
+    global_limiter = asyncio.Semaphore(10)  # Maximum 10 tasks in flight at once
+    
     async with ClientSession() as session:
-        # Create tasks for all timestamps
-        tasks = []
-        for ts in timestamps:
-            task = asyncio.create_task(
-                fetch_and_filter(session, endpoint, ts, semaphore, station_id)
-            )
-            tasks.append(task)
-        
-        # Process tasks with a progress bar
-        for task in tqdm(asyncio.as_completed(tasks), total=len(tasks), desc=f"Fetching {endpoint.strip('/')}"):
-            filtered_result = await task
-            results.extend(filtered_result)
+        # Process in smaller batches to avoid creating too many tasks at once
+        batch_size = 400
+        for i in range(0, len(timestamps), batch_size):
+            batch = timestamps[i:i+batch_size]
+            
+            # Create tasks for current batch
+            tasks = []
+            for ts in batch:
+                task = asyncio.create_task(
+                    rate_limited_fetch(session, endpoint, ts, semaphore, global_limiter, station_id)
+                )
+                tasks.append(task)
+            
+            # Process tasks with a progress bar
+            for task in tqdm(asyncio.as_completed(tasks), total=len(tasks), 
+                          desc=f"Fetching {endpoint.strip('/')} batch {i//batch_size+1}/{len(timestamps)//batch_size+1}"):
+                filtered_result = await task
+                if filtered_result:
+                    results.extend(filtered_result)
     
     return results
+
+async def rate_limited_fetch(session, endpoint, ts, semaphore, global_limiter, station_id):
+    """Helper function to add global rate limiting"""
+    async with global_limiter:
+        # Add a small random delay to avoid synchronized requests
+        await asyncio.sleep(random.uniform(0.1, 0.5))
+        return await fetch_and_filter(session, endpoint, ts, semaphore, station_id)
 
 def adjust_to_59(dt_str):
     """
@@ -168,9 +199,9 @@ async def main():
     
     # Define endpoints and their concurrent request limits
     endpoints = {
-        "air_temperature": ("/air-temperature", 10),
-        "relative_humidity": ("/relative-humidity", 10),
-        "rainfall": ("/rainfall", 10)
+        "air_temperature": ("/air-temperature", 5),
+        "relative_humidity": ("/relative-humidity", 5),
+        "rainfall": ("/rainfall", 5)
     }
     
     results = {}
