@@ -32,8 +32,10 @@ You might need to still run the cells that contains !pip install just in case.
 As the project is on python notebooks, you can click Run All and the model should train and return you the results.
 
 However, if you solely want to see the result, run the python notebook named: "7. visualisation_of_all_model_performance"
+
 For this you will need to download a zip file from the following Google Drive link that contains all our models:
 https://drive.google.com/file/d/1lgrPe3VbCrH6XrMrt9VezLvgKJ3GP_sJ/view?usp=sharing
+
 Once you download the zip file, unzip the contents and place them in the "final_models" folder.
 
 Clicking "Run All" here will load all of our models and return to you:
