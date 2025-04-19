@@ -30,4 +30,11 @@ You might need to still run the cells that contains !pip install just in case.
 
 As the project is entire on python notebooks, you can click Run All and the model should train and return you the results.
 
+However, if you solely want to see the result, run the pytho notebook named: "7. visualisation_of_all_model_performance"
+
+Clicking "Run All" here will load all of our models and return to you:
+- MAE of that model
+- Average Validation Loss
+- A graph of a random batch that will allow you to see the predicted and target  
+
 Thank you very much!
