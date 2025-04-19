@@ -12,7 +12,7 @@ In this project folder, you will find 2 folder, 6 Python Notebooks and 1 dataset
 - 7 Python Notebooks:
     - The python notebooks that are numbered 1 to 6 all trains different models as the file name describes.
     - To retrain models, you can re-run the entire notebook except the cells that we have indicated that are for wandb hyperparameter tuning. These are the cells that have been commented out.
-    - The final python notebook labeled 7 is for visualisation of all of our models. Just click "Run All"
+    - The final python notebook labeled 7 is for visualisation of all of our models. To run this, you will need to download our pretrained models from the following Google Drive [link](https://drive.google.com/file/d/1lgrPe3VbCrH6XrMrt9VezLvgKJ3GP_sJ/view?usp=sharing), place the files inside the final_models folder and then click "Run All"
 - merged_file_with_mean.csv:
     - This is the dataset that we have curated and are using for all the model training.
 
