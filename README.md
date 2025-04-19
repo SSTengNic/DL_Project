@@ -30,7 +30,7 @@ You might need to still run the cells that contains !pip install just in case.
 ## Run and Test
 
 ### For Training:
-As the project is on python notebooks, you can click Run All and the model should train and return you the results.
+As the project is on python notebooks, you can click "Run All" on each individual python notebook and the model should train and return you the results.
 
 
 ### To see all the models performance:
