@@ -9,9 +9,10 @@ In this project folder, you will find 2 folder, 6 Python Notebooks and 1 dataset
     - This folder is used by us to get data from the various APIs. It contains our script to call data.gov.sg and NEA APIs and merging the individually gathered files into a merged dataset.
 - final_models: 
     - This folder contains all the .pth that can be used to load our pre-trained models.
-- 6 Python Notebooks:
-    - The 6 python notebooks that are numbered all trains different models as the file name describes.
+- 7 Python Notebooks:
+    - The python notebooks that are numbered 1 to 6 all trains different models as the file name describes.
     - To retrain models, you can re-run the entire notebook except the cells that we have indicated that are for wandb hyperparameter tuning. These are the cells that have been commented out.
+    - The final python notebook labeled 7 is for visualisation of all of our models. Just click "Run All"
 - merged_file_with_mean.csv:
     - This is the dataset that we have curated and are using for all the model training.
 
